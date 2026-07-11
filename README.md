@@ -33,5 +33,6 @@ The rate limiter can be implemented at various points in the order processing pi
 3. No syscalls: No file I/O, no network I/O, no time calls
 4. Integer math only: No floating point math, no division, no modulus. Only addition, subtraction, bit shifts, and bitwise operations.
 
-# Code Structure
-The code will be structured into the following components:
+# Project Architecture
+
+The design is built around one principle: **the hot path is a single straight shot.** An order enters, gets handed to the risk thread over a lock-free lane, runs through four checks ordered cheapest-first, and comes out as a decision. Everything that isn't on that line: market-data updates, config, logging — is deliberately pushed off to the side.
