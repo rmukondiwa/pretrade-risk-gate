@@ -29,6 +29,9 @@ The rate limiter can be implemented at various points in the order processing pi
 ## The hot path must never stall or block.
 
 1. No allocation: No new/malloc. Everything is pre-allocated: object pools, fixed-size buffers, etc.
-2. No locks: It must be single threaded. All state on one thread, nothing to lock. Threads communicate via lock free ring buffers, not shared mutexes.
+2. The risk engine core is single-threaded: One thread owns all risk state, so the state itself needs no locks. The system is multi-threaded (order-entry, risk, market-data threads), and they hand off via lock-free SPSC ring buffers instead of sharing locked state.
 3. No syscalls: No file I/O, no network I/O, no time calls
 4. Integer math only: No floating point math, no division, no modulus. Only addition, subtraction, bit shifts, and bitwise operations.
+
+# Code Structure
+The code will be structured into the following components:
