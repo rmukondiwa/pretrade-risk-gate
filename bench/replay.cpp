@@ -11,55 +11,55 @@ It:
 #include <sstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include "gate/types.hpp"
 
 class ReplayProducer
 {
 public:
 
-// Reads a CSV file and returns a vector of rows, where each row is a vector of strings (cells)
-    std::vector<std::vector<std::string>> readCSV(const std::string& filename)
+    // Maps a ticker string ("AAPL") to a numeric SymbolId, assigning a new id
+    // the first time a symbol is seen. symbol_id is an integer, never a string.
+    gate::SymbolId symbolToId(const std::string& symbol)
     {
-        std::vector<std::vector<std::string>> data;
+        auto it = symbolIds.find(symbol);
+        if (it != symbolIds.end())
+            return it->second;
+        gate::SymbolId id = static_cast<gate::SymbolId>(symbolIds.size());
+        symbolIds[symbol] = id;
+        return id;
+    }
+
+    // Reads the CSV and returns one gate::Order per data row.
+    std::vector<gate::Order> readCSV(const std::string& filename)
+    {
+        std::vector<gate::Order> orders;
         std::ifstream file(filename);
 
-        if (!file.is_open())
-        {
-            std::cerr << "Failed to open: " << filename << std::endl;
-            return data;
-        }
 
-        std::string line;
-        while (std::getline(file, line))
-        {
-            std::vector<std::string> row;
-            std::stringstream ss(line);
-            std::string cell;
 
-            while(std::getline(ss, cell, ','))
-            {
-                row.push_back(cell);
-            }
-
-            data.push_back(row);
-        }
+        
 
         file.close();
-        return data;
+        return orders;
     }
+
+private:
+    std::unordered_map<std::string, gate::SymbolId> symbolIds;
 };
 
 int main()
 {
     ReplayProducer producer;
-    auto data = producer.readCSV("data/orders.csv");
+    auto orders = producer.readCSV("data/orders.csv");
 
-    for(const auto& row : data)
+    for(const auto& order : orders)
     {
-        for(const auto& cell : row)
-        {
-            std::cout << cell << "\t";
-        }
-        std::cout << std::endl;
+        std::cout << order.ts << "\t"
+                  << order.symbol_id << "\t"
+                  << (order.side == gate::Side::Buy ? "Buy" : "Sell") << "\t"
+                  << order.price << "\t"
+                  << order.qty << std::endl;
     }
 
     return 0;

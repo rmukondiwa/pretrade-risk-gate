@@ -16,7 +16,7 @@ namespace gate {
     enum class Side : uint8_t
     {
         Buy = 0,
-        Side = 0,
+        Sell = 1,
     };
 
    struct Order
