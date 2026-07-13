@@ -9,7 +9,7 @@ public:
     int size, rear, front, capacity;
     std::vector<T> buff;
 
-    RingBuffer(int cap) : size(0), rear(cap-1), front(0), capacity(cap), buff(cap)
+    RingBuffer(int cap) : size(0), tail(cap-1), head(0), capacity(cap), buff(cap)
     {
     }
 
@@ -19,8 +19,8 @@ public:
         {
             return false;
         }
-        rear = (rear +1)&(capacity-1);
-        buff[rear] = item;
+        tail = (tail +1)&(capacity-1);
+        buff[tail] = item;
         size++;
         return true;
     }
@@ -33,7 +33,7 @@ public:
         }
         
         out = buff[front];
-        front = (front+1)&(capacity-1);
+        head = (head+1)&(capacity-1);
         size--;
         return true;
     }
