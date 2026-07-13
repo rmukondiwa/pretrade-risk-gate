@@ -24,13 +24,13 @@ public:
         {
             return false;
         }
-        tail = (tail +1)&(capacity-1);
+        tail = (tail +1)&mask;
         buff[tail] = item;
         size++;
         return true;
     }
 
-    bool pop(const T& out)
+    bool pop(T& out)
     {
         if(size==0)
         {
@@ -38,7 +38,7 @@ public:
         }
         
         out = buff[front];
-        head = (head+1)&(capacity-1);
+        head = (head+1)&mask;
         size--;
         return true;
     }
