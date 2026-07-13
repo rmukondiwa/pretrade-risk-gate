@@ -1,12 +1,15 @@
-template <typename T>
 #include <vector>
+#include <atomic>
+#include <cstddef>
+template <typename T>
 
 class RingBuffer{
 
+public:
     int size, rear, front, capacity;
-    vector<T> buff;
+    std::vector<T> buff;
 
-    RingBuffer<T>(int cap) : size(0), rear(cap-1), front(0), capacity(cap), buff(cap)
+    RingBuffer(int cap) : size(0), rear(cap-1), front(0), capacity(cap), buff(cap)
     {
     }
 
@@ -22,14 +25,15 @@ class RingBuffer{
         return true;
     }
 
-    bool pop(const T& item)
+    bool pop(const T& out)
     {
         if(size==0)
         {
             return false;
         }
-
-        front = (front+1)&capacity;
+        
+        out = buff[front];
+        front = (front+1)&(capacity-1);
         size--;
         return true;
     }
@@ -38,4 +42,4 @@ class RingBuffer{
     {
         return size == capacity;
     }
-}
+};
