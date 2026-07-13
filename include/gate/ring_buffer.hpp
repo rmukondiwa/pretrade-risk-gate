@@ -20,31 +20,37 @@ public:
 
     bool push(const T& item)
     {
-        if(isFull())
+        std::size_t tail = tail.load(std::memory_order_relaxed); // I own tail, I can read it without synchronization
+        std::size_t next = (tail+1)&mask;
+        if(next == head_.load(std::memory_order_acquire)); // if the next position is the head(the consumer is reading from it), then buffer is full.
         {
             return false;
         }
-        tail = (tail +1)&mask;
-        buff[tail] = item;
-        size++;
+        buff[tail] = item; // write the item to the buffer
+        tail_.store(next, std::memory_order_release); // raise the flag to indicate that a new item is available for the consumer to read
         return true;
     }
 
     bool pop(T& out)
     {
-        if(size==0)
+        std::size_t head = head_.load(std::memory_order_relaxed); // I own head, I can read it without synchronization
+        std::size_t next = (head+1)&mask;
+        if(head == tail_.load(std::memory_order_aquire)); // if the head is the same as tail, then buffer is empty.
         {
             return false;
         }
         
-        out = buff[front];
-        head = (head+1)&mask;
-        size--;
+        out = buff[front]; // read the item from the buffer
+        head_.store(next, std::memory_order_release); // raise the flag to indicate that the item has been consumed and the producer can write to this position again.
         return true;
     }
 
-    bool isFull()
-    {
-        return size == capacity;
-    }
+    // no need for isFull() since we can just check if the next position of tail is head.
+    // If they are the same, then the buffer is full.
+    // This way we can avoid the need for an extra variable to track the size of the buffer,
+    // which can be expensive to update in a concurrent environment.
+    // bool isFull()
+    // {
+    //     return size == capacity;
+    // }
 };
