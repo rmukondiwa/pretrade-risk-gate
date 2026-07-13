@@ -6,11 +6,16 @@ template <typename T>
 class RingBuffer{
 
 public:
-    int size, rear, front, capacity;
+    std::size_t size;
+    std::atomic<std::size_t> tail{0};
+    std::atomic<std::size_t> head{0};
+    std::size_t capacity;
+    std::size_t mask; // capacity-1
     std::vector<T> buff;
 
-    RingBuffer(int cap) : size(0), tail(cap-1), head(0), capacity(cap), buff(cap)
+    explicit RingBuffer(std::size_t cap) : size(0), tail(cap-1), head(0), capacity(cap), buff(cap), mask(cap-1)
     {
+        assert((cap&(cap-1)) == 0 && cap>0);
     }
 
     bool push(const T& item)
