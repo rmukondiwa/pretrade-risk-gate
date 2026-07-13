@@ -14,6 +14,7 @@ It:
 #include <unordered_map>
 #include "loader.hpp"
 #include "gate/types.hpp"
+#include "gate/ring_buffer.hpp"
 
 class ReplayProducer
 {
@@ -24,6 +25,7 @@ int main()
 {
     Loader loader;
     ReplayProducer producer;
+    RingBuffer<gate::Order> ringbuff(1024);
     auto orders = loader.load("data/orders.csv");
 
     for(const auto& order : orders)
@@ -33,6 +35,9 @@ int main()
                   << (order.side == gate::Side::Buy ? "Buy" : "Sell") << "\t"
                   << order.price << "\t"
                   << order.qty << std::endl;
+        
+        ringbuff.push(order);
+        std::cout << "order pushed!" << std::endl;
     }
 
     return 0;
