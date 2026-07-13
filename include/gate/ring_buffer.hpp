@@ -1,4 +1,6 @@
 template <typename T>
+#include <vector>
+
 class RingBuffer{
 
     int size, rear, front, capacity;
