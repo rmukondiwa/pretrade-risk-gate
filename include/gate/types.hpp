@@ -34,11 +34,18 @@ namespace gate {
         RejectReason reason; // why, if rejected
     };
 
+    struct RiskConfig
+    {
+        Quantity maxOrderQty;
+    };
+
     enum struct Verdict
     {
         Reject,
         Accept,
+        Throttle,
     };
+
 
     enum class RejectReason
     {
