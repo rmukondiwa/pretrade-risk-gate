@@ -34,9 +34,10 @@ namespace gate {
         RejectReason reason; // why, if rejected
     };
 
-    struct Verdict
+    enum struct Verdict
     {
-
+        Reject,
+        Accept,
     };
 
     enum class RejectReason
