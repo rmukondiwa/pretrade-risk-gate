@@ -3,8 +3,12 @@
 
 namespace gate
 {
+    struct RiskConfig
+    {
+        Quantity maxOrderQty;
+    };
 
-    class RiskGate 
+    class RiskGate
     {
         public:
             RiskGate(const RiskConfig& cfg, TokenBucket bkt) : config(cfg), bucket(bkt){}
@@ -17,8 +21,6 @@ namespace gate
                 //TODO: position check
 
                 return accept();
-
-
             }
 
         private:
@@ -40,6 +42,9 @@ namespace gate
             {
                 return Decision{Verdict::Reject, r };
             }
+
+            RiskConfig config;
+            TokenBucket bucket;
 
     }
 
