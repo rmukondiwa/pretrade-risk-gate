@@ -1,5 +1,6 @@
 #pragma once
 #include "gate/types.hpp"
+#include "gate/token_bucket.hpp"
 
 namespace gate
 {
