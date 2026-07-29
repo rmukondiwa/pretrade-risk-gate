@@ -27,4 +27,26 @@ namespace gate {
         Price price;
         Quantity qty;
     };
+
+    struct Decision
+    {
+        Verdict verdict; // Accept / Reject / Throttle
+        RejectReason reason; // why, if rejected
+    };
+
+    enum struct Verdict
+    {
+        Reject,
+        Accept,
+        Throttle,
+    };
+
+    enum class RejectReason
+    {
+        None, // order was accepted
+        FatFingerPrice, // price too far from market
+        MaxSize, // order too big
+        RateLimited, // too many orders too fast
+        PositionLimit, // would breach position cap
+    };
 }
