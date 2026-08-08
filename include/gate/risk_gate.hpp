@@ -1,5 +1,6 @@
 #pragma once
 #include "gate/types.hpp"
+#include "gate/token_bucket.hpp"
 
 namespace gate
 {
@@ -13,11 +14,11 @@ namespace gate
         public:
             RiskGate(const RiskConfig& cfg, TokenBucket bkt) : config(cfg), bucket(bkt){}
 
-            Decision process (const gate::Order& order)
+            Decision process (const gate::Order& order, Timestamp now)
             {
                 if (!fat_finger_ok(order)) return reject(RejectReason::FatFingerPrice);
                 if (!size_ok(order)) return reject(RejectReason::MaxSize);
-                if(!bucket.try_take()) return reject(RejectReason::RateLimited);
+                if(!bucket.try_take(now)) return reject(RejectReason::RateLimited);
                 //TODO: position check
 
                 return accept();
@@ -46,7 +47,5 @@ namespace gate
             RiskConfig config;
             TokenBucket bucket;
 
-    }
-
-
+    };
 }
