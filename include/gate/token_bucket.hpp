@@ -1,5 +1,6 @@
 #pragma once
 #include "gate/types.hpp"
+#include <algorithm>
 
 namespace gate
 {
@@ -8,11 +9,18 @@ namespace gate
         private:
             std::uint64_t rate, capacity;
             std::uint64_t tokens; // available tokens left
-            std::uint64_t lastRefill;
+            Timestamp lastRefill;
+            static constexpr std::uint64_t NANOS_PER_SEC = 1'000'000'000;
 
             void refill(Timestamp now)
             {
                 std::uint64_t elapsed = now - lastRefill;
+                std::uint64_t newTokens = elapsed*rate / NANOS_PER_SEC;
+                if(newTokens>0)
+                {
+                    tokens = std::min(tokens+newTokens, capacity);
+                    lastRefill = now;
+                }
             }
 
         public:
@@ -32,9 +40,8 @@ namespace gate
             bool try_take(Timestamp now)
             {
                 refill(now);
-                lastRefill = now;
 
-                if(tokens<=0)
+                if(tokens==0)
                 {
                     return false;
                 }
