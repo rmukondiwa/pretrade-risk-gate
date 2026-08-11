@@ -19,22 +19,7 @@ namespace gate {
         Sell = 1,
     };
 
-   struct Order
-    {
-        Timestamp ts;
-        SymbolId symbol_id;
-        Side side;
-        Price price;
-        Quantity qty;
-    };
-
-    struct Decision
-    {
-        Verdict verdict; // Accept / Reject / Throttle
-        RejectReason reason; // why, if rejected
-    };
-
-    enum struct Verdict
+    enum class Verdict
     {
         Reject,
         Accept,
@@ -48,5 +33,20 @@ namespace gate {
         MaxSize, // order too big
         RateLimited, // too many orders too fast
         PositionLimit, // would breach position cap
+    };
+    
+   struct Order
+    {
+        Timestamp ts;
+        SymbolId symbol_id;
+        Side side;
+        Price price;
+        Quantity qty;
+    };
+
+    struct Decision
+    {
+        Verdict verdict; // Accept / Reject / Throttle
+        RejectReason reason; // why, if rejected
     };
 }
