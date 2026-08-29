@@ -30,3 +30,11 @@ void test_refill_over_time()
     // advance 10ms -> ~1 token should have refilled
     assert(b.try_take(10'000'000) && "should refill after 10 ms");
 }
+
+int main()
+{
+    test_starts_full_and_caps();
+    test_refill_over_time();
+    std::cout << "token_bucket tests passed\n";
+    return 0;
+}
