@@ -28,11 +28,11 @@ int main()
     ReplayProducer producer;
     RingBuffer<gate::Order> ringbuff(1024);
     auto orders = loader.load("data/orders.csv");
-    gate::RiskConfig cfg{/*max order qty*/ 1000};
-    gate::TokenBucket bucket{/* rate*/ 100, /*capacity*/100 };
+    gate::RiskConfig cfg{/*max order qty*/ 50};
+    gate::TokenBucket bucket{/* rate*/ 10, /*capacity*/10 };
     gate::RiskGate gate{cfg, bucket};
 
-    std::size_t accepted, rejected = 0;
+    std::size_t accepted =0, rejected = 0;
     for(const auto& order : orders)
     {
         gate::Decision d = gate.process(order, order.ts);
