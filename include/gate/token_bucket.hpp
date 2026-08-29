@@ -27,11 +27,11 @@ namespace gate
 
         // rate     = tokens added per second (sustained order rate)
         // capacity = max tokens the bucket can hold (burst allowance)
-            TokenBucket(uint64_t rate, uint64_t capacity, uint64_t tokens)
+            TokenBucket(uint64_t rate, uint64_t capacity)
             {
                 this->rate = rate;
                 this->capacity = capacity;
-                this->tokens = tokens;
+                this->tokens = capacity;  // start full
                 lastRefill = 0;
             }
 
