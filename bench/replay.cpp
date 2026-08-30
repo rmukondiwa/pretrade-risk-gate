@@ -28,8 +28,18 @@ int main()
     ReplayProducer producer;
     RingBuffer<gate::Order> ringbuff(1024);
     auto orders = loader.load("data/orders.csv");
-    gate::RiskConfig cfg{/*max order qty*/ 50};
-    gate::TokenBucket bucket{/* rate*/ 10, /*capacity*/10 };
+    gate::RiskConfig cfg;
+    cfg.maxOrderQty = 1000;
+    cfg.maxDevPercent = 5;
+    cfg.referencePrices = {
+    {0, 1500000},   // symbol 0 ~1.5M
+    {1, 4200000},   // symbol 1 ~4.2M
+    {2, 1400000},   // symbol 2 ~1.4M
+    {3, 1200000},   // symbol 3 ~1.2M
+    {4, 2500000},   // symbol 4 ~2.5M
+    {5, 1800000},   // symbol 5 ~1.8M
+    };
+    gate::TokenBucket bucket{/* rate*/ 100, /*capacity*/100 };
     gate::RiskGate gate{cfg, bucket};
 
     std::size_t accepted =0, rejected = 0;
