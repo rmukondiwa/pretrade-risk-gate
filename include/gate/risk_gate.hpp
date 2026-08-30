@@ -1,12 +1,15 @@
 #pragma once
 #include "gate/types.hpp"
 #include "gate/token_bucket.hpp"
+#include <unordered_map>
 
 namespace gate
 {
     struct RiskConfig
     {
         Quantity maxOrderQty;
+        std::unordered_map<SymbolId, Price> referencePrices; // per-symbol
+        uint32_t maxDevPercent;
     };
 
     class RiskGate
@@ -25,14 +28,32 @@ namespace gate
             }
 
         private:
-            bool size_ok(const gate::Order& order)
+            bool size_ok(const gate::Order& order) const
             {
                 return order.qty <= config.maxOrderQty;
             }
 
-            bool fat_finger_ok(const gate::Order& order)
+            bool fat_finger_ok(const gate::Order& order) const
             {
-                return true; // Stub, this will read reference data
+                auto it = config.referencePrices.find(order.symbol_id);
+                if(it == config.referencePrices.end())
+                {
+                    return true; // no ref so cant check
+                }
+                
+                Price ref = it->second;
+                Price band = ref * config.maxDevPercent / 100;
+
+                if(order.side == Side::Buy)
+                {
+                    // reject if buying too far ABOVE market
+                    return order.price <= ref + band;
+                }
+                else
+                {
+                    return order.price >= ref - band;
+                }
+
             }
             static Decision accept()
             {
