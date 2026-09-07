@@ -26,15 +26,22 @@ namespace gate{
 
             T read() const            // reader thread(s) call this
             {
-                while(seq%2 != 0)
+                while(true)
                 {
-                    // check seq
+                    std::uint64_t seq1 = seq.load(); // counter before
+                    T readValue = value;            // optimistic read
 
-                }
-                T readValue;
-                if(seq %2 ==0)
-                {
-                    readValue = value;
+                    std::uint64_t seq2 = seq.load(); // counter after
+
+                    // clean read if: seq1 was even and unchanged
+                    if((seq1 %2 == 0) && (seq1 == seq2))
+                    {
+                        return readValue;
+                    }
+                    else
+                    {
+                        continue;
+                    }
                 }
             }
     };
