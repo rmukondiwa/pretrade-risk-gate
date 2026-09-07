@@ -29,7 +29,6 @@ namespace gate
             }
 
         private:
-            const SeqLock<Price>& livePrice;
             bool size_ok(const gate::Order& order) const
             {
                 return order.qty <= config.maxOrderQty;
@@ -79,6 +78,7 @@ namespace gate
 
             RiskConfig config;
             TokenBucket bucket;
+            const SeqLock<Price>& livePrice;
 
     };
 }

@@ -29,7 +29,7 @@ int main()
 {
     Loader loader;
     ReplayProducer producer;
-    //RingBuffer<gate::Order> ringbuff(1024);  // not in use yet
+    //RingBuffer<gate::Order> ringbuff(1024);  // not in use
     auto orders = loader.load("data/orders.csv");
     
     gate::SeqLock<gate::Price> livePrice;
