@@ -17,7 +17,25 @@ namespace gate{
 
             }
 
-            void write(const& T& val); // writer thread calls this
-            T read() const;            // reader thread(s) call this
+            void write(const T& val) // writer thread calls this
+            {
+                seq++;
+                value = val;
+                seq++;
+            }
+
+            T read() const            // reader thread(s) call this
+            {
+                while(seq%2 != 0)
+                {
+                    // check seq
+
+                }
+                T readValue;
+                if(seq %2 ==0)
+                {
+                    readValue = value;
+                }
+            }
     };
 }
