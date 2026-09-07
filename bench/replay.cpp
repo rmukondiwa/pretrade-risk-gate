@@ -16,6 +16,9 @@ It:
 #include "gate/types.hpp"
 #include "gate/ring_buffer.hpp"
 #include "gate/risk_gate.hpp"
+#include "gate/seq_lock.hpp"
+#include <thread>
+#include <atomic>
 
 class ReplayProducer
 {
@@ -26,13 +29,30 @@ int main()
 {
     Loader loader;
     ReplayProducer producer;
-    RingBuffer<gate::Order> ringbuff(1024);
+    //RingBuffer<gate::Order> ringbuff(1024);  // not in use yet
     auto orders = loader.load("data/orders.csv");
+    
+    gate::SeqLock<gate::Price> livePrice;
+    livePrice.write(1500000);   // seed with symbol 0's starting price
+
+    std::atomic<bool> stop{false};
+
+    // Market-data thread: wiggle symbol 0's price over time
+    std::thread market_data([&] {
+        gate::Price p = 1500000;
+        while(!stop)
+        {
+            //simple simulated movement -- nudge up and down
+            p+= (p%7) -3;   // crude pseudo-wiggle; replace w anything
+            livePrice.write(p);
+            std::this_thread::sleep_for(std::chrono::microseconds(10));
+        }
+    });
+
     gate::RiskConfig cfg;
     cfg.maxOrderQty = 1000;
     cfg.maxDevPercent = 5;
     cfg.referencePrices = {
-    {0, 1500000},   // symbol 0 ~1.5M
     {1, 4200000},   // symbol 1 ~4.2M
     {2, 1400000},   // symbol 2 ~1.4M
     {3, 1200000},   // symbol 3 ~1.2M
@@ -40,7 +60,7 @@ int main()
     {5, 1800000},   // symbol 5 ~1.8M
     };
     gate::TokenBucket bucket{/* rate*/ 100, /*capacity*/100 };
-    gate::RiskGate gate{cfg, bucket};
+    gate::RiskGate gate{cfg, bucket, livePrice};
 
     std::size_t accepted =0, rejected = 0;
     for(const auto& order : orders)
@@ -68,5 +88,8 @@ int main()
         // std::cout << "order pushed!" << std::endl;
     }
     std::cout << "accepted: " << accepted << "  rejected: " << rejected << "\n";
+
+    stop = true;
+    market_data.join();
     return 0;
 }
