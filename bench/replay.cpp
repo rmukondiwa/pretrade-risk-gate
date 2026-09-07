@@ -20,6 +20,7 @@ It:
 #include <thread>
 #include <atomic>
 
+using namespace gate;
 class ReplayProducer
 {
 public:
@@ -32,7 +33,7 @@ int main()
     //RingBuffer<gate::Order> ringbuff(1024);  // not in use
     auto orders = loader.load("data/orders.csv");
     
-    gate::SeqLock<gate::Price> livePrice;
+    SeqLock<Price> livePrice;
     livePrice.write(1500000);   // seed with symbol 0's starting price
 
     std::atomic<bool> stop{false};
