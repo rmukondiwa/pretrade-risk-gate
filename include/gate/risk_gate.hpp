@@ -1,6 +1,7 @@
 #pragma once
 #include "gate/types.hpp"
 #include "gate/token_bucket.hpp"
+#include "gate/seq_lock.hpp"
 #include <unordered_map>
 
 namespace gate
@@ -15,7 +16,7 @@ namespace gate
     class RiskGate
     {
         public:
-            RiskGate(const RiskConfig& cfg, TokenBucket bkt) : config(cfg), bucket(bkt){}
+            RiskGate(const RiskConfig& cfg, TokenBucket bkt, const SeqLock<Price>& live_price) : config(cfg), bucket(bkt), livePrice(live_price){}
 
             Decision process (const gate::Order& order, Timestamp now)
             {
@@ -28,6 +29,7 @@ namespace gate
             }
 
         private:
+            const SeqLock<Price>& livePrice;
             bool size_ok(const gate::Order& order) const
             {
                 return order.qty <= config.maxOrderQty;
@@ -35,13 +37,23 @@ namespace gate
 
             bool fat_finger_ok(const gate::Order& order) const
             {
-                auto it = config.referencePrices.find(order.symbol_id);
-                if(it == config.referencePrices.end())
+
+                Price ref;
+                if(order.symbol_id == 0)
                 {
-                    return true; // no ref so cant check
+                    ref = livePrice.read();
+                }
+                else
+                {
+                    auto it = config.referencePrices.find(order.symbol_id);
+                    if(it == config.referencePrices.end())
+                    {
+                        return true; // no ref so cant check
+                    }
+                    
+                    ref = it->second;
                 }
                 
-                Price ref = it->second;
                 Price band = ref * config.maxDevPercent / 100;
 
                 if(order.side == Side::Buy)
