@@ -21,22 +21,16 @@ It:
 #include <atomic>
 
 using namespace gate;
-class ReplayProducer
-{
-public:
-
-};
 int main()
 {
     Loader loader;
-    ReplayProducer producer;
-    //RingBuffer<gate::Order> ringbuff(1024);  // not in use
     auto orders = loader.load("data/orders.csv");
     
     SeqLock<Price> livePrice;
     livePrice.write(1500000);   // seed with symbol 0's starting price
 
-    std::atomic<bool> stop{false};
+    std::atomic<bool> stop{false};      // stops the market-data thread
+    std::atomic<bool> producer_done{false}; // signals producer finished pushing
 
     // Market-data thread: wiggle symbol 0's price over time
     std::thread market_data([&] {
@@ -63,34 +57,56 @@ int main()
     gate::TokenBucket bucket{/* rate*/ 100, /*capacity*/100 };
     gate::RiskGate gate{cfg, bucket, livePrice};
 
+    // --- The ring buffer between producer and consumer  ---
+    RingBuffer<gate::Order> ring(1024);
+
     std::size_t accepted =0, rejected = 0;
+
+    // --- Consumer thread: pop from ring, run the gate --
+    std::thread consumer([&] {
+        gate::Order order;
+        while(true)
+        {
+            if(ring.pop(order))
+            {
+                gate::Decision d = gate.process(order, order.ts);
+                if(d.verdict == gate::Verdict::Accept)
+                {
+                    ++accepted;
+                }
+                else
+                {
+                    ++rejected;
+                    std::cout << "REJECT " << order.symbol_id
+                        << " qty=" << order.qty
+                        << " reason=" << static_cast<int>(d.reason) << "\n";
+                }
+            }
+            else
+            {
+                // buffer empty: stop only if producer is done (all drained)
+                if(producer_done.load(std::memory_order_acquire)) break;
+                // else busy-spin
+            }
+        }
+    });
+
+    // -- Producer (main thread): push every order, backpressure if full --
     for(const auto& order : orders)
     {
-        gate::Decision d = gate.process(order, order.ts);
-
-        if(d.verdict == gate::Verdict::Accept)
+        while(!ring.push(order))
         {
-            ++accepted;
+            // buffer full: spin until consumer makes room
         }
-        else
-        {
-            ++rejected;
-             std::cout << "REJECT " << order.symbol_id
-                  << " qty=" << order.qty
-                  << " reason=" << static_cast<int>(d.reason) << "\n";
-        }
-        // std::cout << order.ts << "\t"
-        //           << order.symbol_id << "\t"
-        //           << (order.side == gate::Side::Buy ? "Buy" : "Sell") << "\t"
-        //           << order.price << "\t"
-        //           << order.qty << std::endl;
-        
-        // ringbuff.push(order);
-        // std::cout << "order pushed!" << std::endl;
     }
-    std::cout << "accepted: " << accepted << "  rejected: " << rejected << "\n";
+    producer_done.store(true, std::memory_order_release);
 
+    // -- Shutdown --
+    consumer.join();
     stop = true;
     market_data.join();
+
+
+    std::cout << "accepted: " << accepted << "  rejected: " << rejected << "\n";
     return 0;
 }
