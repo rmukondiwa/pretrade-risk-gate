@@ -1,6 +1,6 @@
 #include <cassert>
 #include <iostream>
-#include "gate/risk_gate.hpp"
+#include "include/gate/risk_gate.hpp"
 
 using namespace gate;
 
