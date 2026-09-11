@@ -2,7 +2,3 @@
 bin/
 bin/*
 *.class
-
-replay
-test_bucket
-test_gate
