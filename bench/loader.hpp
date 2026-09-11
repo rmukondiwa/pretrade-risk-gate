@@ -1,5 +1,7 @@
 #pragma once
-
+#include <unordered_map>
+#include <fstream>
+#include <sstream>
 #include <iostream>
 #include <vector>
 #include "gate/types.hpp"

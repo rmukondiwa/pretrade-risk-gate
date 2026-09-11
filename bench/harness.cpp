@@ -72,5 +72,19 @@ int main()
         sink += static_cast<std::uint64_t>(d.verdict);
     }
 
-    
+    // report percentiles
+    std::sort(samples.begin(), samples.end());
+    auto pct = [&](double p) {
+        return samples[static_cast<std::size_t>(p*(samples.size() -1))];
+    };
+
+    std::cout << "samples: " << samples.size() << "\n";
+    std::cout << "min:   " << samples.front() << " cycles\n";
+    std::cout << "p50:   " << pct(0.50)  << " cycles\n";
+    std::cout << "p99:   " << pct(0.99)  << " cycles\n";
+    std::cout << "p99.9: " << pct(0.999) << " cycles\n";
+    std::cout << "max:   " << samples.back() << " cycles\n";
+    std::cout << "(sink=" << sink << ")\n";   // print sink so it's definitely used
+
+    return 0;
 }
