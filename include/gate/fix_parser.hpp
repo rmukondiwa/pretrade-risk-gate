@@ -1,3 +1,4 @@
+#pragma once
 #include <sstream>
 #include <iostream>
 #include <unordered_map>
@@ -10,8 +11,8 @@ namespace gate{
     class FixParser
     {
         private:
-            std::unordered_map<int, std::string> tokenMap;
             static constexpr char SOH = '\x01';
+            static constexpr char eq = '=';
 
             std::vector<std::string> splitBySOH(std::string& fixMessage, char SOH)
             {
@@ -30,11 +31,21 @@ namespace gate{
                 return tokens;
             }
 
+            void splitIntoMap(std::vector<std::string>& tokens, char eq)
+            {
+                for(auto& token : tokens)
+                {
+                    int delim = token.find(eq);
+                    tokenMap[std::stoi(token.substr(0, delim))] = token.substr(delim+1);
+                }
+            }
+
         public:
+            std::unordered_map<int, std::string> tokenMap;
             FixParser(std::string& fixMessage)
             {
-                std::vector<std::string>& tokens = splitBySOH(fixMessage, SOH);
-
+                std::vector<std::string> tokens = splitBySOH(fixMessage, SOH);
+                splitIntoMap(tokens, eq);
             }
-    }
+    };
 }
